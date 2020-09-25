@@ -35,10 +35,10 @@ model_name_profile = '_pf' if is_profile_in_graph is True else ''
 model_name_emb = '_emb' if is_emb_in_graph is True else ''
 
 print('Using features: ')
-print('Sequence.\n') if is_seq_in_graph
-print('Contact.\n') if is_con_in_graph
-print('SS + SA.\n') if is_profile_in_graph
-print('Embedding.\n') if is_emb_in_graph
+print('Sequence.\n') if is_seq_in_graph else print('')
+print('Contact.\n') if is_con_in_graph else print('')
+print('SS + SA.\n') if is_profile_in_graph else print('')
+print('Embedding.\n') if is_emb_in_graph else print('')
 
 dataset = ['davis', 'kiba'][int(sys.argv[1])]
 print('Dataset: ', dataset)
