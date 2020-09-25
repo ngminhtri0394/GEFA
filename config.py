@@ -1,0 +1,12 @@
+is_seq_in_graph = True
+is_con_in_graph = True
+is_profile_in_graph = True
+is_emb_in_graph = True
+NUM_EPOCHS = 2000
+TRAIN_BATCH_SIZE = 128
+TEST_BATCH_SIZE = 256
+run_model = 0
+cuda = 0
+setting = 0
+LR = 0.0005
+dataset = 'davis'

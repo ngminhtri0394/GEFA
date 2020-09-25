@@ -1,5 +1,6 @@
 from math import sqrt
 import numpy as np
+from scipy import stats
 
 def rmse(y, f):
     rmse = sqrt(((y - f) ** 2).mean(axis=0))
