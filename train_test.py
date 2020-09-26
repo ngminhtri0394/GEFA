@@ -1,9 +1,9 @@
 import copy
 import os
-import sys
-import pickle
-
 import pandas as pd
+import pickle
+import sys
+import time
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -151,6 +151,7 @@ def resume(model, optimizer, savefile):
         print("Checkpoint loaded . Resume training from epoch {}, LR = {}.".format(epoch, LR))
         return best_mse, best_ci, epoch, optimizer, model, LR
 
+
 compound_iso_smiles = []
 pdbs = []
 pdbs_seqs = []
@@ -168,31 +169,41 @@ dta_graph = {}
 print('Pre-processing protein')
 print('Pre-processing...')
 saved_prot_graph = {}
-for target, seq in set(zip(pdbs, pdbs_seqs)):
-    if os.path.isfile('data/' + dataset + '/map/' + target + '.npy'):
-        contactmap = np.load('data/' + dataset + '/map/' + target + '.npy')
-    else:
-        raise FileNotFoundError
-    c_size, features, edge_index, edge_weight = prot_to_graph(seq, contactmap, target, dataset)
-    g = DATA.Data(
-        x=torch.Tensor(features),
-        edge_index=torch.LongTensor(edge_index).transpose(1, 0),
-        edge_attr=torch.FloatTensor(edge_weight),
-        prot_len=c_size
-    )
-    saved_prot_graph[target] = g
-with open('saved_prot_graph.pickle', 'wb') as handle:
-    pickle.dump(saved_prot_graph, handle, protocol=pickle.HIGHEST_PROTOCOL)
+if os.path.isfile('saved_prot_graph.pickle'):
+    print("Load pre-processed file for protein graph")
+    with open('saved_prot_graph.pickle', 'rb') as handle:
+        saved_prot_graph = pickle.load(handle)
+else:
+    for target, seq in set(zip(pdbs, pdbs_seqs)):
+        if os.path.isfile('data/' + dataset + '/map/' + target + '.npy'):
+            contactmap = np.load('data/' + dataset + '/map/' + target + '.npy')
+        else:
+            raise FileNotFoundError
+        c_size, features, edge_index, edge_weight = prot_to_graph(seq, contactmap, target, dataset)
+        g = DATA.Data(
+            x=torch.Tensor(features),
+            edge_index=torch.LongTensor(edge_index).transpose(1, 0),
+            edge_attr=torch.FloatTensor(edge_weight),
+            prot_len=c_size
+        )
+        saved_prot_graph[target] = g
+    with open('saved_prot_graph.pickle', 'wb') as handle:
+        pickle.dump(saved_prot_graph, handle, protocol=pickle.HIGHEST_PROTOCOL)
 saved_drug_graph = {}
-for smiles in compound_iso_smiles:
-    c_size2, features2, edge_index2 = smile_to_graph(smiles)
-    g2 = DATA.Data(
-        x=torch.Tensor(features2),
-        edge_index=torch.LongTensor(edge_index2).transpose(1, 0),
-    )
-    saved_drug_graph[smiles] = g2
-with open('saved_drug_graph.pickle', 'wb') as handle:
-    pickle.dump(saved_drug_graph, handle, protocol=pickle.HIGHEST_PROTOCOL)
+if os.path.isfile('saved_drug_graph.pickle'):
+    print("Load pre-processed file for drug graph")
+    with open('saved_drug_graph.pickle', 'rb') as handle:
+        saved_drug_graph = pickle.load(handle)
+else:
+    for smiles in compound_iso_smiles:
+        c_size2, features2, edge_index2 = smile_to_graph(smiles)
+        g2 = DATA.Data(
+            x=torch.Tensor(features2),
+            edge_index=torch.LongTensor(edge_index2).transpose(1, 0),
+        )
+        saved_drug_graph[smiles] = g2
+    with open('saved_drug_graph.pickle', 'wb') as handle:
+        pickle.dump(saved_drug_graph, handle, protocol=pickle.HIGHEST_PROTOCOL)
 for target, seq, smile, label in pdbs_tseqs:
     g = copy.deepcopy(saved_prot_graph[target])
     g2 = copy.deepcopy(saved_drug_graph[smile])
